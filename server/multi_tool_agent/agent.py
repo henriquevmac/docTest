@@ -1,3 +1,4 @@
+from itertools import product
 from datetime import datetime
 from google.adk.agents import Agent
 import requests
@@ -72,55 +73,59 @@ def get_availability(dateInit: str, dateEnd: str, service: list[int], provider: 
     Returns:
         list: list of availability where each availability is a dictionary with the keys "Service_id", "Provider_id", "Day", "startTime", "endTime", "duration", empty list if no availability is available.
     """
-    body = {
-            "dateInit": dateInit,
-            "dateEnd": dateEnd,
-            "services": service,
-            "providers": provider,
-            }
-    response = requests.post("https://api.doc.pt/booking-page/doc/stores/doc/availability", json=body)
-    if response.status_code == 200:
-        json_response = response.json()
-        availabilities = []
-        for availability in json_response["data"]:
-            day = availability["day"]
-            for hours in availability["hours"]:
-                startTime = hours["start"]
-                endTime = hours["end"]
-                providers = hours["providers"]
-                services = hours["services"]
-                durations = hours["durations"]
-                for i, provider in enumerate(providers):
-                    provider_id = provider
-                    service_id = services[i]
-                    duration = durations[i]
-                    availability = {
-                            "Service_id": service_id,
-                            "Provider_id": provider_id,
-                            "Day": day,
-                            "startTime": startTime,
-                            "endTime": endTime,
-                            "duration": duration,
-                            }
-                    availabilities.append(availability)
-        return availabilities
-    else:
-        return []
+    availabilities = []
+    combinations = list(product(service, provider))
+    for combination in combinations:
+        body = {
+                "dateInit": dateInit,
+                "dateEnd": dateEnd,
+                "services": [combination[0]],
+                "providers": [combination[1]],
+                }
+        response = requests.post("https://api.doc.pt/booking-page/doc/stores/doc/availability", json=body)
+        if response.status_code == 200:
+            json_response = response.json()
+            for availability in json_response["data"]:
+                day = availability["day"]
+                for hours in availability["hours"]:
+                    startTime = hours["start"]
+                    endTime = hours["end"]
+                    providers = hours["providers"]
+                    services = hours["services"]
+                    durations = hours["durations"]
+                    for i, provider in enumerate(providers):
+                        provider_id = provider
+                        service_id = services[i]
+                        duration = durations[i]
+                        avail = {
+                                "Service_id": service_id,
+                                "Provider_id": provider_id,
+                                "Day": day,
+                                "startTime": startTime,
+                                "endTime": endTime,
+                                "duration": duration,
+                                }
+                        availabilities.append(avail)
+        else:
+            return []
+    return availabilities
 
 root_agent = Agent(
         name="clinic_booking_agent",
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         description=(
-            "Agent to answer questions about the services available in a clinic, the providers for each service and the availability for a specified date range."
+            "Agente para responder a questões sobre disponibilidades de serviços fornecidos para um intervalo de datas especificado."
             ),
         instruction=(
-            "You are a helpful agent who can answer user questions about the services available in a clinic, what providers are available for each service and their availabilities in a time frame. "
-            "You should not inform the user of the Id's of the services nor for the providers, this is metadata that only you should be able to see to make your job easier. " 
-            "You can also get the current date to help you finding dates if the user only uses relative terms such as Tomorrow, end of the month, etc. " 
-            "If the user doesn't provide an end date you should assume that the end date is the end of the current month. "
-            "If the user doesn't provide a start date you should assume that the start date is the current date. "
-            "If the user only provides a date range when asking for availability, you should get the list of all serices and providers and then return their availabilities in the date range provided. "
-            "When the user asks for the availability you should return it in the format: Service Name, Provider Name, Day, Start Time, End Time, Duration. "
+            "Tu és um AI agent que ajuda na consulta de disponibilidades numa clínica. "
+            "Tu NUNCA deves informar o utilizador dos ID's dos serviços nem dos colaboradores. Isto são apenas dados para te auxiliar. "
+            "O utilizador pode consultar que serviços tens disponíveis, que colaboradores é que fazem o serviço X, mas o mais comum será perguntarem disponibilidades. "
+            "Tu consegues também obter a data atual para ajudar a encontrar datas se o utilizador utilizar termos relativos como amanhã, esta semana, fim do mês e etc. "
+            "Se o utilizador não fornecer uma data de fim tu deves assumir que a data de fim é 3 meses após a data atual. "
+            "Se o utilizador não fornecer uma data de início tu deves assumir que a data de início é o dia de hoje. "
+            "Se o utilizador não fornecer um serviço nem um colaborador quando pedir disponibilidades tu deves assumir que ele quer as disponibilidades de todos os serviços e colaboradores, então deverás ir buscar a lista de todos os serviços e a lista de todos os colaboradores de cada serviço, e depois as disponibilidades. "
+            "Se o utilizador pedir disponibilidades deves fornecê-las no formato: Nome do Serviço, Nome do Colaborador, Dia, Tempo de Início, Tempo de Fim, Duração. "
+            "Se o utilizador apenas pedir disponibilidades para um tempo especifico tu deves ir buscar todas as disponibilidades e apenas mostrar disponibilidades com um Tempo Inicial igual a esse, se não exisitiram deves informar o utilizador disso e pedir desculpa. "
             ),
         tools=[get_services, get_providers, get_availability, get_current_date],
         )
