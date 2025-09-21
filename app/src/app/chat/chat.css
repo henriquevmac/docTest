@@ -1,0 +1,9 @@
+.chat-page { height: 100dvh; display: flex; flex-direction: column; padding: 16px; box-sizing: border-box; }
+.chat-box { flex: 1; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fafafa; }
+.msg { margin: 8px 0; display: flex; }
+.bubble { white-space: pre-wrap; max-width: 75%; padding: 8px 12px; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.bubble.user { margin-left: auto; background: #e6f0ff; }
+.input-row { display: flex; gap: 8px; margin-top: 12px; }
+input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
+button { padding: 10px 14px; border: none; border-radius: 8px; background: #3f51b5; color: white; cursor: pointer; }
+button[disabled] { opacity: 0.6; cursor: default; }

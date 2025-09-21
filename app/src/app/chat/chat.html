@@ -1,0 +1,20 @@
+<div class="chat-page">
+  <div class="chat-box" #scrollable [scrollTop]="scrollable.scrollHeight">
+    <div class="msg" *ngFor="let m of messages()">
+      <markdown class="bubble" [class.user]="m.role==='user'" [data]="m.text"></markdown>
+    </div>
+    <div class="msg" *ngIf="loading()">
+      <div class="bubble">...</div>
+    </div>
+  </div>
+
+  <div class="input-row">
+    <input
+    type="text"
+    [(ngModel)]="draft"
+    (keyup.enter)="send()"
+    placeholder="Type your message"
+    />
+    <button (click)="send()" [disabled]="!draft || loading()">Send</button>
+  </div>
+</div>
