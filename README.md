@@ -2,12 +2,14 @@
 
 ## Repo Structure
 
+```
 |-server/
   |-docAgentTool/
     |-.env_example (example file for environment variables for the agent)
     |-__init__.py (init file NEEDED)
     |-agent.py (agent configuration file)
 |-app/ (Simple AngularJS with a Chat)
+```
 
 ## Setup
 
