@@ -1,10 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MarkdownModule } from 'ngx-markdown';
 
-const API_URL = 'https://doc-test-api-301874410303.europe-west1.run.app/run';
+const API_URL = 'https://doc-test-api-301874410303.europe-west1.run.app';
 // const API_URL = 'http://localhost:8000/run';
 const MODEL_NAME = 'doc-test-model'
 
@@ -52,9 +52,31 @@ export class Chat {
   loading = signal(false);
   draft = '';
 
+  initializing() {
+    // Creates a new session in the agent
+    // Can be updated to use actual userID
+    var url = API_URL + '/apps/' + MODEL_NAME + '/users/1/sessions/1'
+    console.log(url);
+    this.http.post(url, null).subscribe({
+      next: (res) => {
+        console.log(res);
+      },
+      error: (err) => {
+        if (err.status !== 400) {
+          this.messages.update(arr => [...arr, { role: 'model', text: 'Error contacting server.' }]);
+        }
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.initializing();
+  }
+
   constructor(private http: HttpClient) {}
 
   send() {
+    var url = API_URL + '/run';
     const text = this.draft.trim();
     if (!text || this.loading()) return;
 
@@ -65,8 +87,8 @@ export class Chat {
 
     var requestBody: ApiRequestBody = {
       appName: MODEL_NAME,
-      userId: "0",
-      sessionId: "0",
+      userId: "1",
+      sessionId: "1",
       newMessage: {
         parts: [{ text: text }],
         role: "user"
@@ -75,7 +97,7 @@ export class Chat {
     }
 
     // POST to Python API (adjust URL and payload to match backend)
-    this.http.post<ApiResponse[]>(API_URL, requestBody)
+    this.http.post<ApiResponse[]>(url, requestBody)
       .subscribe({
       next: (res) => {
         var messages = '';
