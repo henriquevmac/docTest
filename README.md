@@ -56,12 +56,12 @@ Open your browser and go to http://localhost:4200
 
 ## Deploy
 
-### Agente
-
 [Install google cloud cli](https://cloud.google.com/sdk/docs/install)
 Follow the instructions to configure the gcloud cli
 
 Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-gcloud-project-id>`).
+
+### Agente ([Cloud Run](https://google.github.io/adk-docs/deploy/cloud-run/))
 
 ``` bash
 cd server
@@ -75,3 +75,26 @@ adk deploy cloud-run \
 ```
 The agent will be deployed to Cloud Run and will be available at the URL printed in the console.
 
+### AngularJS (Cloud Run)
+
+```bash
+docker build -t angularjs-app .
+
+docker tag angularjs-app gcr.io/<your-gcloud-project-id>/angularjs-app
+
+gcloud auth configure-docker
+
+docker push gcr.io/<your-gcloud-project-id>/angularjs-app
+```
+
+To deploy you can go to your project in [Cloud Run](https://console.cloud.google.com/run)
+
+or you can use the gcloud cli
+
+```bash
+gcloud run deploy angularjs-app \
+  --image gcr.io/<your-gcloud-project-id>/angularjs-app \
+  --platform managed \
+  --region YOUR-REGION(europe-west1) \
+  --allow-unauthenticated
+```
