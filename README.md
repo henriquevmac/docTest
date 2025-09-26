@@ -96,5 +96,5 @@ gcloud run deploy angularjs-app \
   --image gcr.io/<your-gcloud-project-id>/angularjs-app \
   --platform managed \
   --region YOUR-REGION(europe-west1) \
-  --allow-unauthenticated
+  --allow-unauthenticated(optional, used for testing purposes)
 ```
